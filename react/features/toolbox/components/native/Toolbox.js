@@ -246,20 +246,20 @@ class Toolbox extends Component<Props, State> {
             <View
                 pointerEvents = 'box-none'
                 style = { styles.toolbar }>
-                {
-                    _chatEnabled
-                        && <ChatButton
-                            styles = { buttonStyles }
-                            toggledStyles = {
-                                this._getChatButtonToggledStyle(toggledButtonStyles)
-                            } />
-                }
-                {
-                    !_chatEnabled
-                        && <InfoDialogButton
-                            styles = { buttonStyles }
-                            toggledStyles = { toggledButtonStyles } />
-                }
+                {/*{*/}
+                {/*    _chatEnabled*/}
+                {/*        && <ChatButton*/}
+                {/*            styles = { buttonStyles }*/}
+                {/*            toggledStyles = {*/}
+                {/*                this._getChatButtonToggledStyle(toggledButtonStyles)*/}
+                {/*            } />*/}
+                {/*}*/}
+                {/*{*/}
+                {/*    !_chatEnabled*/}
+                {/*        && <InfoDialogButton*/}
+                {/*            styles = { buttonStyles }*/}
+                {/*            toggledStyles = { toggledButtonStyles } />*/}
+                {/*}*/}
                 <AudioMuteButton
                     styles = { buttonStyles }
                     toggledStyles = { toggledButtonStyles } />
@@ -268,9 +268,9 @@ class Toolbox extends Component<Props, State> {
                 <VideoMuteButton
                     styles = { buttonStyles }
                     toggledStyles = { toggledButtonStyles } />
-                <OverflowMenuButton
-                    styles = { buttonStyles }
-                    toggledStyles = { toggledButtonStyles } />
+                {/*<OverflowMenuButton*/}
+                {/*    styles = { buttonStyles }*/}
+                {/*    toggledStyles = { toggledButtonStyles } />*/}
             </View>
         );
     }

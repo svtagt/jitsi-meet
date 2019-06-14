@@ -103,7 +103,8 @@ export default createStyleSheet({
         left: 0,
         paddingHorizontal: 48,
         position: 'absolute',
-        right: 0
+        right: 0,
+        display: 'none'
     },
 
     /**
