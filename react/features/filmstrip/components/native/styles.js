@@ -23,7 +23,8 @@ export default {
         flexDirection: 'row',
         flexGrow: 0,
         justifyContent: 'flex-end',
-        height: FILMSTRIP_SIZE
+        height: FILMSTRIP_SIZE,
+        display: 'none'
     },
 
     /**
@@ -39,7 +40,8 @@ export default {
         flexGrow: 0,
         position: 'absolute',
         right: 0,
-        top: 0
+        top: 0,
+        display: 'none'
     },
 
     /**
