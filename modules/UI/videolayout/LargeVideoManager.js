@@ -280,10 +280,15 @@ export default class LargeVideoManager {
                 = APP.conference.isAudioOnly()
                     || APP.conference.isConnectionInterrupted();
 
+            // this.updateParticipantConnStatusIndication(
+            //         id,
+            //         !overrideAndHide && isConnectionInterrupted,
+            //         !overrideAndHide && messageKey);
+
             this.updateParticipantConnStatusIndication(
-                    id,
-                    !overrideAndHide && isConnectionInterrupted,
-                    !overrideAndHide && messageKey);
+                id,
+                false,
+                !overrideAndHide && messageKey);
 
             // Change the participant id the presence label is listening to.
             this.updatePresenceLabel(id);

@@ -252,7 +252,7 @@ class Conference extends AbstractConference<Props, *> {
 
                     <Captions onPress = { this._onClick } />
 
-                    { _shouldDisplayTileView || <DisplayNameLabel participantId = { _largeVideoParticipantId } /> }
+                    {/*{ _shouldDisplayTileView || <DisplayNameLabel participantId = { _largeVideoParticipantId } /> }*/}
 
                     {/*
                       * The Toolbox is in a stacking layer bellow the Filmstrip.

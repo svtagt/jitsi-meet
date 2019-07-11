@@ -191,7 +191,7 @@ export function getParticipantDisplayName(
 
     return typeof interfaceConfig === 'object'
         ? interfaceConfig.DEFAULT_REMOTE_DISPLAY_NAME
-        : 'Fellow Jitster';
+        : 'Doctor';
 }
 
 /**

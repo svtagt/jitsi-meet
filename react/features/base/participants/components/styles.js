@@ -20,7 +20,8 @@ export default createStyleSheet({
         fontSize: 12,
         marginVertical: BoxModel.margin,
         marginHorizontal: BoxModel.margin,
-        textAlign: 'center'
+        textAlign: 'center',
+        display: 'none'
     },
 
     /**
