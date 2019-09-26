@@ -344,8 +344,11 @@
 /**
  * Toolbar icon internal i elements (font icons).
  */
-.toolbar-icon>i {
-    line-height: $thumbnailToolbarHeight;
+.toolbar-icon>div {
+    height: $thumbnailToolbarHeight;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 /**
@@ -493,7 +496,6 @@
 }
 
 #dominantSpeakerAvatarContainer,
-#dominantSpeakerAvatar,
 .dynamic-shadow {
     width: 200px;
     height: 200px;
@@ -503,13 +505,8 @@
     top: 50px;
     margin: auto;
     position: relative;
-    border-radius: 100px;
     overflow: hidden;
     visibility: inherit;
-}
-#dominantSpeakerAvatar {
-    background-color: #000000;
-    object-fit: cover;
 }
 
 .dynamic-shadow {
@@ -524,7 +521,6 @@
 .avatar-container {
     @include maxSize(60px);
     @include absoluteAligning();
-    border-radius: 50%;
     display: flex;
     justify-content: center;
     height: 50%;
@@ -541,13 +537,17 @@
 #videoNotAvailableScreen {
     text-align: center;
     #avatarContainer {
+        border-radius: 50%;
+        display: inline-block;
         height: 50vh;
-        display:inline-block;
         margin-top: 25vh;
+        overflow: hidden;
+        width: 50vh;
 
         #avatar {
-            border-radius: 50%;
             height: 100%;
+            object-fit: cover;
+            width: 100%;
         }
     }
 }

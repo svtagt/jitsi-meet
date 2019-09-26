@@ -89,7 +89,6 @@ function RemoteVideo(user, VideoLayout, emitter) {
     this._stopRemoteControl = this._stopRemoteControl.bind(this);
 
     this.container.onclick = this._onContainerClick;
-    this.container.ondblclick = this._onContainerDoubleClick;
 }
 
 RemoteVideo.prototype = Object.create(SmallVideo.prototype);
@@ -487,6 +486,8 @@ RemoteVideo.prototype.hasVideoStarted = function() {
 
 RemoteVideo.prototype.addRemoteStreamElement = function(stream) {
     if (!this.container) {
+        logger.debug('Not attaching remote stream due to no container');
+
         return;
     }
 
@@ -499,6 +500,8 @@ RemoteVideo.prototype.addRemoteStreamElement = function(stream) {
     }
 
     if (!stream.getOriginalStream()) {
+        logger.debug('Remote video stream has no original stream');
+
         return;
     }
 

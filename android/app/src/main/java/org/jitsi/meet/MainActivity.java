@@ -21,14 +21,13 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
-import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.KeyEvent;
+import androidx.annotation.Nullable;
 
 import org.jitsi.meet.sdk.JitsiMeet;
 import org.jitsi.meet.sdk.JitsiMeetActivity;
 import org.jitsi.meet.sdk.JitsiMeetConferenceOptions;
-import org.jitsi.meet.sdk.JitsiMeetUserInfo;
 
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
@@ -107,7 +106,7 @@ public class MainActivity extends JitsiMeetActivity {
     //
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == OVERLAY_PERMISSION_REQUEST_CODE
                 && canRequestOverlayPermission()) {
             if (Settings.canDrawOverlays(this)) {

@@ -5,16 +5,14 @@ import ReactDOM from 'react-dom';
 import { I18nextProvider } from 'react-i18next';
 import { Provider } from 'react-redux';
 
+import { Avatar } from '../../../react/features/base/avatar';
 import { i18next } from '../../../react/features/base/i18n';
-import {
-    Avatar,
-    getAvatarURLByParticipantId
-} from '../../../react/features/base/participants';
 import { PresenceLabel } from '../../../react/features/presence-status';
 /* eslint-enable no-unused-vars */
 
 const logger = require('jitsi-meet-logger').getLogger(__filename);
 
+import { VIDEO_TYPE } from '../../../react/features/base/media';
 import {
     JitsiParticipantConnectionStatus
 } from '../../../react/features/base/lib-jitsi-meet';
@@ -214,8 +212,7 @@ export default class LargeVideoManager {
             container.setStream(id, stream, videoType);
 
             // change the avatar url on large
-            this.updateAvatar(
-                getAvatarURLByParticipantId(APP.store.getState(), id));
+            this.updateAvatar();
 
             // If the user's connection is disrupted then the avatar will be
             // displayed in case we have no video image cached. That is if
@@ -236,7 +233,7 @@ export default class LargeVideoManager {
 
             const showAvatar
                 = isVideoContainer
-                    && (APP.conference.isAudioOnly() || !isVideoRenderable);
+                    && ((APP.conference.isAudioOnly() && videoType !== VIDEO_TYPE.DESKTOP) || !isVideoRenderable);
 
             let promise;
 
@@ -411,18 +408,16 @@ export default class LargeVideoManager {
     /**
      * Updates the src of the dominant speaker avatar
      */
-    updateAvatar(avatarUrl) {
-        if (avatarUrl) {
-            ReactDOM.render(
+    updateAvatar() {
+        ReactDOM.render(
+            <Provider store = { APP.store }>
                 <Avatar
                     id = "dominantSpeakerAvatar"
-                    uri = { avatarUrl } />,
-                this._dominantSpeakerAvatarContainer
-            );
-        } else {
-            ReactDOM.unmountComponentAtNode(
-                this._dominantSpeakerAvatarContainer);
-        }
+                    participantId = { this.id }
+                    size = { 200 } />
+            </Provider>,
+            this._dominantSpeakerAvatarContainer
+        );
     }
 
     /**

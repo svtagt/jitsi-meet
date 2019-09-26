@@ -19,8 +19,7 @@ import {
     JITSI_CONFERENCE_URL_KEY,
     VIDEO_QUALITY_LEVELS
 } from './constants';
-
-const logger = require('jitsi-meet-logger').getLogger(__filename);
+import logger from './logger';
 
 /**
  * Attach a set of local tracks to a conference.
@@ -160,7 +159,11 @@ export function getConferenceName(stateful: Function | Object): string {
     const { callDisplayName } = state['features/base/config'];
     const { pendingSubjectChange, room, subject } = state['features/base/conference'];
 
-    return pendingSubjectChange || subject || callDisplayName || (callee && callee.name) || _.startCase(room);
+    return pendingSubjectChange
+        || subject
+        || callDisplayName
+        || (callee && callee.name)
+        || _.startCase(decodeURIComponent(room));
 }
 
 /**

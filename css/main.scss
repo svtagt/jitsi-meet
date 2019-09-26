@@ -23,12 +23,6 @@ $flagsImagePath: "../images/";
 @import "../node_modules/bc-css-flags/dist/css/bc-css-flags.scss";
 /* Flags END */
 
-/* Fonts BEGIN */
-
-@import 'font';
-
-/* Fonts END */
-
 /* Modules BEGIN */
 
 @import 'aui_reset';
@@ -86,5 +80,6 @@ $flagsImagePath: "../images/";
 @import 'navigate_section_list';
 @import 'third-party-branding/google';
 @import 'third-party-branding/microsoft';
+@import 'avatar';
 
 /* Modules END */

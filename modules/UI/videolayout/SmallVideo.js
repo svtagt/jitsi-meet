@@ -10,9 +10,9 @@ import { Provider } from 'react-redux';
 import { i18next } from '../../../react/features/base/i18n';
 import { AudioLevelIndicator }
     from '../../../react/features/audio-level-indicator';
+import { Avatar as AvatarDisplay } from '../../../react/features/base/avatar';
 import {
-    Avatar as AvatarDisplay,
-    getAvatarURLByParticipantId,
+    getParticipantCount,
     getPinnedParticipant,
     pinParticipant
 } from '../../../react/features/base/participants';
@@ -92,9 +92,6 @@ function SmallVideo(VideoLayout) {
     this.VideoLayout = VideoLayout;
     this.videoIsHovered = false;
 
-    // we can stop updating the thumbnail
-    this.disableUpdateView = false;
-
     /**
      * The current state of the user's bridge connection. The value should be
      * a string as enumerated in the library's participantConnectionStatus
@@ -144,7 +141,6 @@ function SmallVideo(VideoLayout) {
     this.updateView = this.updateView.bind(this);
 
     this._onContainerClick = this._onContainerClick.bind(this);
-    this._onContainerDoubleClick = this._onContainerDoubleClick.bind(this);
 }
 
 /**
@@ -515,8 +511,7 @@ SmallVideo.prototype.isCurrentlyOnLargeVideo = function() {
  * or <tt>false</tt> otherwise.
  */
 SmallVideo.prototype.isVideoPlayable = function() {
-    return this.videoStream // Is there anything to display ?
-        && !this.isVideoMuted && !this.videoStream.isMuted(); // Muted ?
+    return this.videoStream && !this.isVideoMuted && !APP.conference.isAudioOnly();
 };
 
 /**
@@ -525,24 +520,40 @@ SmallVideo.prototype.isVideoPlayable = function() {
  * @return {number} one of <tt>DISPLAY_VIDEO</tt>,<tt>DISPLAY_AVATAR</tt>
  * or <tt>DISPLAY_BLACKNESS_WITH_NAME</tt>.
  */
-SmallVideo.prototype.selectDisplayMode = function() {
+SmallVideo.prototype.selectDisplayMode = function(input) {
+
     // Display name is always and only displayed when user is on the stage
-    if (this.isCurrentlyOnLargeVideo()
-        && !shouldDisplayTileView(APP.store.getState())) {
-        return this.isVideoPlayable() && !APP.conference.isAudioOnly()
-            ? DISPLAY_BLACKNESS_WITH_NAME : DISPLAY_AVATAR_WITH_NAME;
-    } else if (this.isVideoPlayable()
-        && this.selectVideoElement().length
-        && !APP.conference.isAudioOnly()) {
+    if (input.isCurrentlyOnLargeVideo && !input.tileViewEnabled) {
+        return input.isVideoPlayable && !input.isAudioOnly ? DISPLAY_BLACKNESS_WITH_NAME : DISPLAY_AVATAR_WITH_NAME;
+    } else if (input.isVideoPlayable && input.hasVideo && !input.isAudioOnly) {
         // check hovering and change state to video with name
-        return this._isHovered()
-            ? DISPLAY_VIDEO_WITH_NAME : DISPLAY_VIDEO;
+        return input.isHovered ? DISPLAY_VIDEO_WITH_NAME : DISPLAY_VIDEO;
     }
 
     // check hovering and change state to avatar with name
-    return this._isHovered()
-        ? DISPLAY_AVATAR_WITH_NAME : DISPLAY_AVATAR;
+    return input.isHovered ? DISPLAY_AVATAR_WITH_NAME : DISPLAY_AVATAR;
+};
 
+/**
+ * Computes information that determine the display mode.
+ *
+ * @returns {Object}
+ */
+SmallVideo.prototype.computeDisplayModeInput = function() {
+    return {
+        isCurrentlyOnLargeVideo: this.isCurrentlyOnLargeVideo(),
+        isHovered: this._isHovered(),
+        isAudioOnly: APP.conference.isAudioOnly(),
+        tileViewEnabled: shouldDisplayTileView(APP.store.getState()),
+        isVideoPlayable: this.isVideoPlayable(),
+        hasVideo: Boolean(this.selectVideoElement().length),
+        connectionStatus: APP.conference.getParticipantConnectionStatus(this.id),
+        mutedWhileDisconnected: this.mutedWhileDisconnected,
+        wasVideoPlayed: this.wasVideoPlayed,
+        videoStream: Boolean(this.videoStream),
+        isVideoMuted: this.isVideoMuted,
+        videoStreamMuted: this.videoStream ? this.videoStream.isMuted() : 'no stream'
+    };
 };
 
 /**
@@ -559,50 +570,54 @@ SmallVideo.prototype._isHovered = function() {
  * Hides or shows the user's avatar.
  * This update assumes that large video had been updated and we will
  * reflect it on this small video.
- *
- * @param show whether we should show the avatar or not
- * video because there is no dominant speaker and no focused speaker
  */
 SmallVideo.prototype.updateView = function() {
-    if (this.disableUpdateView) {
+    if (this.id) {
+        // Init / refresh avatar
+        this.initializeAvatar();
+    } else {
+        logger.error('Unable to init avatar - no id', this);
+
         return;
-    }
-
-    if (!this.hasAvatar) {
-        if (this.id) {
-            // Init avatar
-            this.avatarChanged(
-                getAvatarURLByParticipantId(APP.store.getState(), this.id));
-        } else {
-            logger.error('Unable to init avatar - no id', this);
-
-            return;
-        }
     }
 
     this.$container.removeClass((index, classNames) =>
         classNames.split(' ').filter(name => name.startsWith('display-')));
 
-    // Determine whether video, avatar or blackness should be displayed
-    const displayMode = this.selectDisplayMode();
+    const oldDisplayMode = this.displayMode;
+    let displayModeString = '';
 
-    switch (displayMode) {
+    const displayModeInput = this.computeDisplayModeInput();
+
+    // Determine whether video, avatar or blackness should be displayed
+    this.displayMode = this.selectDisplayMode(displayModeInput);
+
+    switch (this.displayMode) {
     case DISPLAY_AVATAR_WITH_NAME:
+        displayModeString = 'avatar-with-name';
         this.$container.addClass('display-avatar-with-name');
         break;
     case DISPLAY_BLACKNESS_WITH_NAME:
+        displayModeString = 'blackness-with-name';
         this.$container.addClass('display-name-on-black');
         break;
     case DISPLAY_VIDEO:
+        displayModeString = 'video';
         this.$container.addClass('display-video');
         break;
     case DISPLAY_VIDEO_WITH_NAME:
+        displayModeString = 'video-with-name';
         this.$container.addClass('display-name-on-video');
         break;
     case DISPLAY_AVATAR:
     default:
+        displayModeString = 'avatar';
         this.$container.addClass('display-avatar-only');
         break;
+    }
+
+    if (this.displayMode !== oldDisplayMode) {
+        logger.debug(`Displaying ${displayModeString} for ${this.id}, data: [${JSON.stringify(displayModeInput)}]`);
     }
 };
 
@@ -610,19 +625,23 @@ SmallVideo.prototype.updateView = function() {
  * Updates the react component displaying the avatar with the passed in avatar
  * url.
  *
- * @param {string} avatarUrl - The uri to the avatar image.
  * @returns {void}
  */
-SmallVideo.prototype.avatarChanged = function(avatarUrl) {
+SmallVideo.prototype.initializeAvatar = function() {
     const thumbnail = this.$avatar().get(0);
 
     this.hasAvatar = true;
 
     if (thumbnail) {
+        // Maybe add a special case for local participant, as on init of
+        // LocalVideo.js the id is set to "local" but will get updated later.
         ReactDOM.render(
-            <AvatarDisplay
-                className = 'userAvatar'
-                uri = { avatarUrl } />,
+            <Provider store = { APP.store }>
+                <AvatarDisplay
+                    className = 'userAvatar'
+                    participantId = { this.id }
+                    size = { this.$avatar().width() } />
+            </Provider>,
             thumbnail
         );
     }
@@ -811,7 +830,9 @@ SmallVideo.prototype.updateIndicators = function() {
     const iconSize = UIUtil.getIndicatorFontSize();
     const showConnectionIndicator = this.videoIsHovered
         || !interfaceConfig.CONNECTION_INDICATOR_AUTO_HIDE_ENABLED;
-    const currentLayout = getCurrentLayout(APP.store.getState());
+    const state = APP.store.getState();
+    const currentLayout = getCurrentLayout(state);
+    const participantCount = getParticipantCount(state);
     let statsPopoverPosition, tooltipPosition;
 
     if (currentLayout === LAYOUTS.TILE_VIEW) {
@@ -846,7 +867,7 @@ SmallVideo.prototype.updateIndicators = function() {
                             iconSize = { iconSize }
                             participantId = { this.id }
                             tooltipPosition = { tooltipPosition } />
-                        { this._showDominantSpeaker
+                        { this._showDominantSpeaker && participantCount > 2
                             ? <DominantSpeakerIndicator
                                 iconSize = { iconSize }
                                 tooltipPosition = { tooltipPosition } />
@@ -860,20 +881,6 @@ SmallVideo.prototype.updateIndicators = function() {
 };
 
 /**
- * Callback invoked when the thumbnail is double clicked. Will pin the
- * participant if in tile view.
- *
- * @param {MouseEvent} event - The click event to intercept.
- * @private
- * @returns {void}
- */
-SmallVideo.prototype._onContainerDoubleClick = function(event) {
-    if (this._pinningRequiresDoubleClick() && this._shouldTriggerPin(event)) {
-        APP.store.dispatch(pinParticipant(this.id));
-    }
-};
-
-/**
  * Callback invoked when the thumbnail is clicked and potentially trigger
  * pinning of the participant.
  *
@@ -882,8 +889,7 @@ SmallVideo.prototype._onContainerDoubleClick = function(event) {
  * @returns {void}
  */
 SmallVideo.prototype._onContainerClick = function(event) {
-    const triggerPin = this._shouldTriggerPin(event)
-        && !this._pinningRequiresDoubleClick();
+    const triggerPin = this._shouldTriggerPin(event);
 
     if (event.stopPropagation && triggerPin) {
         event.stopPropagation();
@@ -932,17 +938,6 @@ SmallVideo.prototype.togglePin = function() {
             ? null : this.id;
 
     APP.store.dispatch(pinParticipant(participantIdToPin));
-};
-
-/**
- * Returns whether or not clicking to pin the participant needs to be a double
- * click instead of a single click.
- *
- * @private
- * @returns {boolean}
- */
-SmallVideo.prototype._pinningRequiresDoubleClick = function() {
-    return shouldDisplayTileView(APP.store.getState());
 };
 
 /**

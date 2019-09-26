@@ -1,17 +1,32 @@
 /* global __dirname */
 
 const process = require('process');
+const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 
 /**
  * The URL of the Jitsi Meet deployment to be proxy to in the context of
  * development with webpack-dev-server.
  */
 const devServerProxyTarget
-    = process.env.WEBPACK_DEV_SERVER_PROXY_TARGET || 'https://beta.meet.jit.si';
+    = process.env.WEBPACK_DEV_SERVER_PROXY_TARGET || 'https://alpha.jitsi.net';
+
+const analyzeBundle = process.argv.indexOf('--analyze-bundle') !== -1;
 
 const minimize
     = process.argv.indexOf('-p') !== -1
         || process.argv.indexOf('--optimize-minimize') !== -1;
+
+/**
+ * Build a Performance configuration object for the given size.
+ * See: https://webpack.js.org/configuration/performance/
+ */
+function getPerformanceHints(size) {
+    return {
+        hints: minimize ? 'error' : false,
+        maxAssetSize: size,
+        maxEntrypointSize: size
+    };
+}
 
 // The base Webpack configuration to bundle the JavaScript artifacts of
 // jitsi-meet such as app.bundle.js and external_api.js.
@@ -45,10 +60,10 @@ const config = {
                 plugins: [
                     require.resolve('@babel/plugin-transform-flow-strip-types'),
                     require.resolve('@babel/plugin-proposal-class-properties'),
-                    require.resolve(
-                        '@babel/plugin-proposal-export-default-from'),
-                    require.resolve(
-                        '@babel/plugin-proposal-export-namespace-from')
+                    require.resolve('@babel/plugin-proposal-export-default-from'),
+                    require.resolve('@babel/plugin-proposal-export-namespace-from'),
+                    require.resolve('@babel/plugin-proposal-nullish-coalescing-operator'),
+                    require.resolve('@babel/plugin-proposal-optional-chaining')
                 ],
                 presets: [
                     [
@@ -91,6 +106,29 @@ const config = {
                 'style-loader',
                 'css-loader'
             ]
+        }, {
+            test: /\/node_modules\/@atlaskit\/modal-dialog\/.*\.js$/,
+            resolve: {
+                alias: {
+                    'react-focus-lock': `${__dirname}/react/features/base/util/react-focus-lock-wrapper.js`
+                }
+            }
+        }, {
+            test: /\/react\/features\/base\/util\/react-focus-lock-wrapper.js$/,
+            resolve: {
+                alias: {
+                    'react-focus-lock': `${__dirname}/node_modules/react-focus-lock`
+                }
+            }
+        }, {
+            test: /\.svg$/,
+            use: [ {
+                loader: '@svgr/webpack',
+                options: {
+                    dimensions: false,
+                    expandProps: 'start'
+                }
+            } ]
         } ]
     },
     node: {
@@ -109,6 +147,13 @@ const config = {
         publicPath: '/libs/',
         sourceMapFilename: `[name].${minimize ? 'min' : 'js'}.map`
     },
+    plugins: [
+        analyzeBundle
+            && new BundleAnalyzerPlugin({
+                analyzerMode: 'disabled',
+                generateStatsFile: true
+            })
+    ].filter(Boolean),
     resolve: {
         alias: {
             jquery: `jquery/dist/jquery${minimize ? '.min' : ''}.js`
@@ -129,31 +174,56 @@ const config = {
 module.exports = [
     Object.assign({}, config, {
         entry: {
-            'app.bundle': './app.js',
-
-            'device_selection_popup_bundle':
-                './react/features/settings/popup.js',
-
-            'alwaysontop':
-                './react/features/always-on-top/index.js',
-
-            'dial_in_info_bundle': [
-                './react/features/invite/components/dial-in-info-page'
-            ],
-
-            'do_external_connect':
-                './connection_optimization/do_external_connect.js',
-
-            'flacEncodeWorker':
-                './react/features/local-recording/'
-                    + 'recording/flac/flacEncodeWorker.js',
-            'analytics-ga':
-                './react/features/analytics/handlers/GoogleAnalyticsHandler.js'
-        }
+            'app.bundle': './app.js'
+        },
+        performance: getPerformanceHints(3 * 1024 * 1024)
     }),
-
-    // The Webpack configuration to bundle external_api.js (aka
-    // JitsiMeetExternalAPI).
+    Object.assign({}, config, {
+        entry: {
+            'device_selection_popup_bundle': './react/features/settings/popup.js'
+        },
+        performance: getPerformanceHints(700 * 1024)
+    }),
+    Object.assign({}, config, {
+        entry: {
+            'alwaysontop': './react/features/always-on-top/index.js'
+        },
+        performance: getPerformanceHints(400 * 1024)
+    }),
+    Object.assign({}, config, {
+        entry: {
+            'dial_in_info_bundle': './react/features/invite/components/dial-in-info-page'
+        },
+        performance: getPerformanceHints(500 * 1024)
+    }),
+    Object.assign({}, config, {
+        entry: {
+            'do_external_connect': './connection_optimization/do_external_connect.js'
+        },
+        performance: getPerformanceHints(5 * 1024)
+    }),
+    Object.assign({}, config, {
+        entry: {
+            'flacEncodeWorker': './react/features/local-recording/recording/flac/flacEncodeWorker.js'
+        },
+        performance: getPerformanceHints(5 * 1024)
+    }),
+    Object.assign({}, config, {
+        entry: {
+            'analytics-ga': './react/features/analytics/handlers/GoogleAnalyticsHandler.js'
+        },
+        performance: getPerformanceHints(5 * 1024)
+    }),
+    Object.assign({}, config, {
+        entry: {
+            'video-blur-effect': './react/features/stream-effects/blur/index.js'
+        },
+        output: Object.assign({}, config.output, {
+            library: [ 'JitsiMeetJS', 'app', 'effects' ],
+            libraryTarget: 'window'
+        }),
+        performance: getPerformanceHints(1 * 1024 * 1024)
+    }),
     Object.assign({}, config, {
         entry: {
             'external_api': './modules/API/external/index.js'
@@ -161,7 +231,8 @@ module.exports = [
         output: Object.assign({}, config.output, {
             library: 'JitsiMeetExternalAPI',
             libraryTarget: 'umd'
-        })
+        }),
+        performance: getPerformanceHints(30 * 1024)
     })
 ];
 
@@ -177,6 +248,7 @@ module.exports = [
 function devServerProxyBypass({ path }) {
     if (path.startsWith('/css/') || path.startsWith('/doc/')
             || path.startsWith('/fonts/') || path.startsWith('/images/')
+            || path.startsWith('/sounds/')
             || path.startsWith('/static/')) {
         return path;
     }
@@ -191,7 +263,7 @@ function devServerProxyBypass({ path }) {
                         // Since webpack-dev-server is serving non-minimized
                         // artifacts, serve them even if the minimized ones are
                         // requested.
-                        Object.keys(c.entry).some(e => {
+                        return Object.keys(c.entry).some(e => {
                             const name = `${e}.min.js`;
 
                             if (path.indexOf(name) !== -1) {
@@ -202,8 +274,6 @@ function devServerProxyBypass({ path }) {
                             }
                         });
                     }
-
-                    return true;
                 }
             })) {
         return path;

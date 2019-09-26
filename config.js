@@ -123,10 +123,6 @@ var config = {
     // are requested again.
     // enableLayerSuspension: false,
 
-    // Suspend sending video if bandwidth estimation is too low. This may cause
-    // problems with audio playback. Disabled until these are fixed.
-    disableSuspendVideo: true,
-
     // Every participant after the Nth will start video muted.
     // startVideoMuted: 10,
 
@@ -200,6 +196,9 @@ var config = {
     // Transcription (in interface_config,
     // subtitles and buttons can be configured)
     // transcribingEnabled: false,
+
+    // Enables automatic turning on captions when recording is started
+    // autoCaptionOnRecord: false,
 
     // Misc
 
@@ -417,6 +416,10 @@ var config = {
     // NOTE: This option is experimental and is currently intended for internal
     // use only.
     // _desktopSharingSourceDevice: 'sample-id-or-label'
+
+    // If true, any checks to handoff to another application will be prevented
+    // and instead the app will continue to display in the current browser.
+    // disableDeepLinking: false
 
     // A property to disable the right click context menu for localVideo
     // the menu has option to flip the locally seen video for local presentations

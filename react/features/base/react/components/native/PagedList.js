@@ -3,7 +3,7 @@
 import React, { Component } from 'react';
 import { SafeAreaView, Text, TouchableOpacity, View } from 'react-native';
 
-import { Icon } from '../../../font-icons';
+import { Icon } from '../../../icons';
 import { connect } from '../../../redux';
 
 import styles from './styles';
@@ -147,7 +147,10 @@ class PagedList extends Component<Props, State> {
         let component;
 
         if (selectedPage && (component = selectedPage.component)) {
-            const { refresh } = component;
+            // react-i18n / react-redux wrap components and thus we cannot access
+            // the wrapped component's static methods directly.
+            const component_ = component.WrappedComponent || component;
+            const { refresh } = component_;
 
             refresh.call(component, this.props.dispatch, isInteractive);
         }
@@ -249,7 +252,7 @@ class PagedList extends Component<Props, State> {
                 style = { styles.pageIndicator } >
                 <View style = { styles.pageIndicatorContent }>
                     <Icon
-                        name = { page.icon }
+                        src = { page.icon }
                         style = { [
                             styles.pageIndicatorIcon,
                             this._getIndicatorStyle(index)

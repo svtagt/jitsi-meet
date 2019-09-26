@@ -16,6 +16,7 @@ import {
 import { updateSettings } from '../../base/settings';
 import '../../google-api';
 import '../../mobile/audio-mode';
+import '../../mobile/back-button';
 import '../../mobile/background';
 import '../../mobile/call-integration';
 import '../../mobile/external-api';
@@ -26,12 +27,11 @@ import '../../mobile/proximity';
 import '../../mobile/wake-lock';
 import '../../mobile/watchos';
 
+import logger from '../logger';
 import { AbstractApp } from './AbstractApp';
 import type { Props as AbstractAppProps } from './AbstractApp';
 
 declare var __DEV__;
-
-const logger = require('jitsi-meet-logger').getLogger(__filename);
 
 /**
  * The type of React {@code Component} props of {@link App}.

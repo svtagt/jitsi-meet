@@ -3,14 +3,14 @@
 import React from 'react';
 import { Text, View } from 'react-native';
 
+import { Avatar } from '../../../base/avatar';
 import { translate } from '../../../base/i18n';
-import { Avatar } from '../../../base/participants';
-import { connect } from '../../../base/redux';
+import { Linkify } from '../../../base/react';
 
-import AbstractChatMessage, {
-    _mapStateToProps,
-    type Props
-} from '../AbstractChatMessage';
+import { replaceNonUnicodeEmojis } from '../../functions';
+
+import AbstractChatMessage, { type Props } from '../AbstractChatMessage';
+
 import styles from './styles';
 
 /**
@@ -46,6 +46,13 @@ class ChatMessage extends AbstractChatMessage<Props> {
             textWrapperStyle.push(styles.systemTextWrapper);
         }
 
+        const messageText = message.messageType === 'error'
+            ? this.props.t('chat.error', {
+                error: message.error,
+                originalText: message.message
+            })
+            : message.message;
+
         return (
             <View style = { styles.messageWrapper } >
                 { this._renderAvatar() }
@@ -55,14 +62,9 @@ class ChatMessage extends AbstractChatMessage<Props> {
                             this.props.showDisplayName
                                 && this._renderDisplayName()
                         }
-                        <Text style = { styles.messageText }>
-                            { message.messageType === 'error'
-                                ? this.props.t('chat.error', {
-                                    error: message.error,
-                                    originalText: message.message
-                                })
-                                : message.message }
-                        </Text>
+                        <Linkify linkStyle = { styles.chatLink }>
+                            { replaceNonUnicodeEmojis(messageText) }
+                        </Linkify>
                     </View>
                     { this.props.showTimestamp && this._renderTimestamp() }
                 </View>
@@ -78,11 +80,14 @@ class ChatMessage extends AbstractChatMessage<Props> {
      * @returns {React$Element<*>}
      */
     _renderAvatar() {
+        const { message } = this.props;
+
         return (
             <View style = { styles.avatarWrapper }>
                 { this.props.showAvatar && <Avatar
-                    size = { styles.avatarWrapper.width }
-                    uri = { this.props._avatarURL } />
+                    displayName = { message.displayName }
+                    participantId = { message.id }
+                    size = { styles.avatarWrapper.width } />
                 }
             </View>
         );
@@ -115,4 +120,4 @@ class ChatMessage extends AbstractChatMessage<Props> {
     }
 }
 
-export default translate(connect(_mapStateToProps)(ChatMessage));
+export default translate(ChatMessage);

@@ -20,15 +20,16 @@ package org.jitsi.meet.sdk;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.widget.FrameLayout;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.facebook.react.ReactRootView;
 import com.facebook.react.bridge.ReadableMap;
 import com.rnimmersive.RNImmersiveModule;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -78,6 +79,15 @@ public abstract class BaseReactView<ListenerT>
     }
 
     /**
+     * Gets all registered React views.
+     *
+     * @return An {@link ArrayList} containing all views currently held by React.
+     */
+    static ArrayList<BaseReactView> getViews() {
+        return new ArrayList<>(views);
+    }
+
+    /**
      * The unique identifier of this {@code BaseReactView} within the process
      * for the purposes of {@link ExternalAPIModule}. The name scope was
      * inspired by postis which we use on Web for the similar purposes of the
@@ -101,8 +111,7 @@ public abstract class BaseReactView<ListenerT>
 
         setBackgroundColor(BACKGROUND_COLOR);
 
-        ReactInstanceManagerHolder.initReactInstanceManager(
-            ((Activity) context).getApplication());
+        ReactInstanceManagerHolder.initReactInstanceManager((Activity)context);
 
         // Hook this BaseReactView into ExternalAPI.
         externalAPIScope = UUID.randomUUID().toString();

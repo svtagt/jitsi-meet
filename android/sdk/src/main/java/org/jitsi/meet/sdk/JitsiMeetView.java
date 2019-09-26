@@ -19,17 +19,19 @@ package org.jitsi.meet.sdk;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.util.Log;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.ReadableMap;
+
+import org.jitsi.meet.sdk.log.JitsiMeetLogger;
 
 import java.lang.reflect.Method;
 import java.util.Map;
 
 
-public class JitsiMeetView extends BaseReactView<JitsiMeetViewListener> {
+public class JitsiMeetView extends BaseReactView<JitsiMeetViewListener>
+        implements OngoingConferenceTracker.OngoingConferenceListener {
 
     /**
      * The {@code Method}s of {@code JitsiMeetViewListener} by event name i.e.
@@ -37,12 +39,6 @@ public class JitsiMeetView extends BaseReactView<JitsiMeetViewListener> {
      */
     private static final Map<String, Method> LISTENER_METHODS
         = ListenerUtils.mapListenerMethods(JitsiMeetViewListener.class);
-
-    /**
-     * The {@link Log} tag which identifies the source of the log messages of
-     * {@code JitsiMeetView}.
-     */
-    private static final String TAG = JitsiMeetView.class.getSimpleName();
 
     /**
      * The URL of the current conference.
@@ -106,6 +102,14 @@ public class JitsiMeetView extends BaseReactView<JitsiMeetViewListener> {
         if (!(context instanceof JitsiMeetActivityInterface)) {
             throw new RuntimeException("Enclosing Activity must implement JitsiMeetActivityInterface");
         }
+
+        OngoingConferenceTracker.getInstance().addListener(this);
+    }
+
+    @Override
+    public void dispose() {
+        OngoingConferenceTracker.getInstance().removeListener(this);
+        super.dispose();
     }
 
     /**
@@ -128,7 +132,7 @@ public class JitsiMeetView extends BaseReactView<JitsiMeetViewListener> {
             try {
                 pipModule.enterPictureInPicture();
             } catch (RuntimeException re) {
-                Log.e(TAG, "failed to enter PiP mode", re);
+                JitsiMeetLogger.e(re, "Failed to enter PiP mode");
             }
         }
     }
@@ -173,27 +177,17 @@ public class JitsiMeetView extends BaseReactView<JitsiMeetViewListener> {
     }
 
     /**
-     * The internal processing for the URL of the current conference set on the
-     * associated {@link JitsiMeetView}.
-     *
-     * @param eventName the name of the external API event to be processed
-     * @param eventData the details/specifics of the event to process determined
-     * by/associated with the specified {@code eventName}.
+     * Handler for {@link OngoingConferenceTracker} events.
+     * @param conferenceUrl
      */
-    private void maybeSetViewURL(String eventName, ReadableMap eventData) {
-        String url = eventData.getString("url");
-
-        switch(eventName) {
-        case "CONFERENCE_WILL_JOIN":
-            this.url = url;
-            break;
-
-        case "CONFERENCE_TERMINATED":
-            if (url != null && url.equals(this.url)) {
-                this.url = null;
-            }
-            break;
-        }
+    @Override
+    public void onCurrentConferenceChanged(String conferenceUrl) {
+        // This property was introduced in order to address
+        // an exception in the Picture-in-Picture functionality which arose
+        // because of delays related to bridging between JavaScript and Java. To
+        // reduce these delays do not wait for the call to be transferred to the
+        // UI thread.
+        this.url = conferenceUrl;
     }
 
     /**
@@ -205,13 +199,6 @@ public class JitsiMeetView extends BaseReactView<JitsiMeetViewListener> {
      */
     @Override
     protected void onExternalAPIEvent(String name, ReadableMap data) {
-        // XXX The JitsiMeetView property URL was introduced in order to address
-        // an exception in the Picture-in-Picture functionality which arose
-        // because of delays related to bridging between JavaScript and Java. To
-        // reduce these delays do not wait for the call to be transferred to the
-        // UI thread.
-        maybeSetViewURL(name, data);
-
         onExternalAPIEvent(LISTENER_METHODS, name, data);
     }
 }

@@ -4,10 +4,11 @@ import React from 'react';
 import {
     Text,
     TouchableOpacity,
+    TouchableWithoutFeedback,
     View
 } from 'react-native';
 
-import { Icon } from '../../../font-icons';
+import { Icon, IconClose } from '../../../icons';
 import { StyleType } from '../../../styles';
 
 import AbstractDialog, {
@@ -51,28 +52,29 @@ class BaseDialog<P: Props, S: State> extends AbstractDialog<P, S> {
         const { _dialogStyles, style } = this.props;
 
         return (
-            <View
-                pointerEvents = 'box-none'
-                style = { [
-                    styles.overlay,
-                    style
-                ] }>
+            <TouchableWithoutFeedback>
                 <View
-                    pointerEvents = 'box-none'
                     style = { [
-                        _dialogStyles.dialog,
-                        this.props.style
+                        styles.overlay,
+                        style
                     ] }>
-                    <TouchableOpacity
-                        onPress = { this._onCancel }
-                        style = { styles.closeWrapper }>
-                        <Icon
-                            name = 'close'
-                            style = { _dialogStyles.closeStyle } />
-                    </TouchableOpacity>
-                    { this._renderContent() }
+                    <View
+                        pointerEvents = 'box-none'
+                        style = { [
+                            _dialogStyles.dialog,
+                            this.props.style
+                        ] }>
+                        <TouchableOpacity
+                            onPress = { this._onCancel }
+                            style = { styles.closeWrapper }>
+                            <Icon
+                                src = { IconClose }
+                                style = { _dialogStyles.closeStyle } />
+                        </TouchableOpacity>
+                        { this._renderContent() }
+                    </View>
                 </View>
-            </View>
+            </TouchableWithoutFeedback>
         );
     }
 

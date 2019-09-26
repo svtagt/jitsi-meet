@@ -8,6 +8,7 @@ import type { Dispatch } from 'redux';
 import { createInviteDialogEvent, sendAnalytics } from '../../../../analytics';
 import { Dialog, hideDialog } from '../../../../base/dialog';
 import { translate, translateToHTML } from '../../../../base/i18n';
+import { Icon, IconPhone } from '../../../../base/icons';
 import { getLocalParticipant } from '../../../../base/participants';
 import { MultiSelectAutocomplete } from '../../../../base/react';
 import { connect } from '../../../../base/redux';
@@ -166,7 +167,7 @@ class AddPeopleDialog extends AbstractAddPeopleDialog<Props, State> {
                 content: <div className = 'footer-text-wrap'>
                     <div>
                         <span className = 'footer-telephone-icon'>
-                            <i className = 'icon-phone' />
+                            <Icon src = { IconPhone } />
                         </span>
                     </div>
                     { translateToHTML(t, 'addPeople.footerText') }
@@ -254,10 +255,10 @@ class AddPeopleDialog extends AbstractAddPeopleDialog<Props, State> {
                 if (invitesLeftToSend.length) {
                     const unsentInviteIDs
                         = invitesLeftToSend.map(invitee =>
-                            invitee.id || invitee.number);
+                            invitee.id || invitee.user_id || invitee.number);
                     const itemsToSelect
                         = inviteItems.filter(({ item }) =>
-                            unsentInviteIDs.includes(item.id || item.number));
+                            unsentInviteIDs.includes(item.id || item.user_id || item.number));
 
                     if (this._multiselect) {
                         this._multiselect.setSelectedItems(itemsToSelect);
@@ -296,7 +297,7 @@ class AddPeopleDialog extends AbstractAddPeopleDialog<Props, State> {
                         size = 'xsmall'
                         src = { user.avatar } />
                 },
-                value: user.id
+                value: user.id || user.user_id
             };
         });
 
@@ -388,12 +389,12 @@ class AddPeopleDialog extends AbstractAddPeopleDialog<Props, State> {
     _renderTelephoneIcon() {
         return (
             <span className = 'add-telephone-icon'>
-                <i className = 'icon-phone' />
+                <Icon src = { IconPhone } />
             </span>
         );
     }
 
-    _setMultiSelectElement: (React$ElementRef<*> | null) => mixed;
+    _setMultiSelectElement: (React$ElementRef<*> | null) => void;
 
     /**
      * Sets the instance variable for the multi select component

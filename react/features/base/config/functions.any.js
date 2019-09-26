@@ -4,6 +4,7 @@ import _ from 'lodash';
 
 import { _CONFIG_STORE_PREFIX } from './constants';
 import parseURLParams from './parseURLParams';
+import logger from './logger';
 
 declare var $: Object;
 
@@ -91,6 +92,7 @@ const WHITELISTED_KEYS = [
     'disableAGC',
     'disableAP',
     'disableAudioLevels',
+    'disableDeepLinking',
     'disableH264',
     'disableHPF',
     'disableNS',
@@ -146,14 +148,35 @@ const WHITELISTED_KEYS = [
     'webrtcIceUdpDisable'
 ];
 
-const logger = require('jitsi-meet-logger').getLogger(__filename);
-
 // XXX The functions getRoomName and parseURLParams are split out of
 // functions.js because they are bundled in both app.bundle and
 // do_external_connect, webpack 1 does not support tree shaking, and we don't
 // want all functions to be bundled in do_external_connect.
 export { default as getRoomName } from './getRoomName';
 export { parseURLParams };
+
+/**
+ * Create a "fake" configuration object for the given base URL. This is used in case the config
+ * couldn't be loaded in the welcome page, so at least we have something to try with.
+ *
+ * @param {string} baseURL - URL of the deployment for which we want the fake config.
+ * @returns {Object}
+ */
+export function createFakeConfig(baseURL: string) {
+    const url = new URL(baseURL);
+
+    return {
+        hosts: {
+            domain: url.hostname,
+            muc: `conference.${url.hostname}`
+        },
+        bosh: `${baseURL}http-bind`,
+        clientNode: 'https://jitsi.org/jitsi-meet',
+        p2p: {
+            enabled: true
+        }
+    };
+}
 
 /**
  * Promise wrapper on obtain config method. When HttpConfigFetch will be moved

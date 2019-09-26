@@ -3,8 +3,8 @@
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
-import { Icon } from '../../../base/font-icons';
 import { translate } from '../../../base/i18n';
+import { Icon, IconClose } from '../../../base/icons';
 
 import AbstractNotification, {
     type Props
@@ -46,7 +46,7 @@ class Notification extends AbstractNotification<Props> {
                     isDismissAllowed
                     && <TouchableOpacity onPress = { this._onDismissed }>
                         <Icon
-                            name = { 'close' }
+                            src = { IconClose }
                             style = { styles.dismissIcon } />
                     </TouchableOpacity>
                 }
@@ -64,25 +64,26 @@ class Notification extends AbstractNotification<Props> {
     _renderContent() {
         const { t, title, titleArguments, titleKey } = this.props;
         const titleText = title || (titleKey && t(titleKey, titleArguments));
+        const description = this._getDescription();
 
-        if (titleText) {
-            return (
+        if (description && description.length) {
+            return description.map((line, index) => (
                 <Text
+                    key = { index }
                     numberOfLines = { 1 }
-                    style = { styles.contentText } >
-                    { titleText }
+                    style = { styles.contentText }>
+                    { line }
                 </Text>
-            );
+            ));
         }
 
-        return this._getDescription().map((line, index) => (
+        return (
             <Text
-                key = { index }
                 numberOfLines = { 1 }
-                style = { styles.contentText }>
-                { line }
+                style = { styles.contentText } >
+                { titleText }
             </Text>
-        ));
+        );
     }
 
     _getDescription: () => Array<string>;
