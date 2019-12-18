@@ -22,7 +22,6 @@ import SharedVideoThumb from '../shared_video/SharedVideoThumb';
 
 import Filmstrip from './Filmstrip';
 import UIEvents from '../../../service/UI/UIEvents';
-import UIUtil from '../util/UIUtil';
 
 import RemoteVideo from './RemoteVideo';
 import LargeVideoManager from './LargeVideoManager';
@@ -168,27 +167,6 @@ const VideoLayout = {
     },
 
     /**
-     * Adds or removes icons for not available camera and microphone.
-     * @param resourceJid the jid of user
-     * @param devices available devices
-     */
-    setDeviceAvailabilityIcons(id, devices) {
-        if (APP.conference.isLocalId(id)) {
-            localVideoThumbnail.setDeviceAvailabilityIcons(devices);
-
-            return;
-        }
-
-        const video = remoteVideos[id];
-
-        if (!video) {
-            return;
-        }
-
-        video.setDeviceAvailabilityIcons(devices);
-    },
-
-    /**
      * Shows/hides local video.
      * @param {boolean} true to make the local video visible, false - otherwise
      */
@@ -328,8 +306,7 @@ const VideoLayout = {
 
         const id = participant.id;
         const jitsiParticipant = APP.conference.getParticipantById(id);
-        const remoteVideo
-            = new RemoteVideo(jitsiParticipant, VideoLayout, eventEmitter);
+        const remoteVideo = new RemoteVideo(jitsiParticipant, VideoLayout);
 
         this._setRemoteControlProperties(jitsiParticipant, remoteVideo);
         this.addRemoteVideoContainer(id, remoteVideo);
@@ -412,27 +389,20 @@ const VideoLayout = {
     /**
      * Resizes thumbnails.
      */
-    resizeThumbnails(
-            forceUpdate = false,
-            onComplete = null) {
-        const { localVideo, remoteVideo }
-            = Filmstrip.calculateThumbnailSize();
+    resizeThumbnails(forceUpdate = false, onComplete = null) {
+        const { localVideo, remoteVideo } = Filmstrip.calculateThumbnailSize();
 
         Filmstrip.resizeThumbnails(localVideo, remoteVideo, forceUpdate);
 
         if (shouldDisplayTileView(APP.store.getState())) {
-            const height
-                = (localVideo && localVideo.thumbHeight)
-                || (remoteVideo && remoteVideo.thumbnHeight)
-                || 0;
+            const height = (localVideo && localVideo.thumbHeight) || (remoteVideo && remoteVideo.thumbnHeight) || 0;
             const qualityLevel = getNearestReceiverVideoQualityLevel(height);
 
             APP.store.dispatch(setMaxReceiverVideoQuality(qualityLevel));
         }
 
         localVideoThumbnail && localVideoThumbnail.rerender();
-        Object.values(remoteVideos).forEach(
-            remoteVideoThumbnail => remoteVideoThumbnail.rerender());
+        Object.values(remoteVideos).forEach(remoteVideoThumbnail => remoteVideoThumbnail.rerender());
 
         if (onComplete && typeof onComplete === 'function') {
             onComplete();
@@ -662,14 +632,6 @@ const VideoLayout = {
         if (largeVideo) {
             largeVideo.updateContainerSize();
             largeVideo.resize(animate);
-        }
-
-        // Calculate available width and height.
-        const availableHeight = window.innerHeight;
-        const availableWidth = UIUtil.getAvailableVideoWidth();
-
-        if (availableWidth < 0 || availableHeight < 0) {
-            return;
         }
     },
 

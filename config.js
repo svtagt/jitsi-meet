@@ -1,16 +1,6 @@
 /* eslint-disable no-unused-vars, no-var */
 
 var config = {
-    // Configuration
-    //
-
-    // Alternative location for the configuration.
-    // configLocation: './config.json',
-
-    // Custom function which given the URL path should return a room name.
-    // getroomnode: function (path) { return 'someprefixpossiblybasedonpath'; },
-
-
     // Connection
     //
 
@@ -60,6 +50,10 @@ var config = {
 
         // Enables the test specific features consumed by jitsi-meet-torture
         // testMode: false
+
+        // Disables the auto-play behavior of *all* newly created video element.
+        // This is useful when the client runs on a host with limited resources.
+        // noAutoPlayVideo: false
     },
 
     // Disables ICE/UDP by filtering out local and remote UDP candidates in
@@ -78,6 +72,11 @@ var config = {
 
     // Disable measuring of audio levels.
     // disableAudioLevels: false,
+
+    // Enabling this will run the lib-jitsi-meet no audio detection module which
+    // will notify the user if the current selected microphone has no audio
+    // input and will suggest another valid device if one is present.
+    // enableNoAudioDetection: false
 
     // Start the conference in audio only mode (no video is being received nor
     // sent).
@@ -298,13 +297,11 @@ var config = {
     // callStatsID: '',
     // callStatsSecret: '',
 
-    // enables callstatsUsername to be reported as statsId and used
-    // by callstats as repoted remote id
-    // enableStatsID: false
-
     // enables sending participants display name to callstats
     // enableDisplayNameInStats: false
 
+    // enables sending participants email if available to callstats and other analytics
+    // enableEmailInStats: false
 
     // Privacy
     //
@@ -424,6 +421,16 @@ var config = {
     // A property to disable the right click context menu for localVideo
     // the menu has option to flip the locally seen video for local presentations
     // disableLocalVideoFlip: false
+
+    // Deployment specific URLs.
+    // deploymentUrls: {
+    //    // If specified a 'Help' button will be displayed in the overflow menu with a link to the specified URL for
+    //    // user documentation.
+    //    userDocumentationURL: 'https://docs.example.com/video-meetings.html',
+    //    // If specified a 'Download our apps' button will be displayed in the overflow menu with a link
+    //    // to the specified URL for an app download page.
+    //    downloadAppsUrl: 'https://docs.example.com/our-apps.html'
+    // }
 
     // List of undocumented settings used in jitsi-meet
     /**
